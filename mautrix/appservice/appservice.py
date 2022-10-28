@@ -177,12 +177,15 @@ class AppService(AppServiceServerMixin):
         await site.start()
 
     async def stop(self) -> None:
-        self.log.debug("Stopping appservice web server")
-        await self.runner.cleanup()
-        self._intent = None
-        await self._http_session.close()
-        self._http_session = None
-        await self.state_store.close()
+        try:
+            self.log.debug("Stopping appservice web server")
+            await self.runner.cleanup()
+            self._intent = None
+            await self._http_session.close()
+            self._http_session = None
+            await self.state_store.close()
+        except Exception as ex:
+            self.log.error("Failed to stop appservice web server: %s", ex)
 
     async def _liveness_probe(self, _: web.Request) -> web.Response:
         return web.Response(status=200 if self.live else 500, text="{}")
